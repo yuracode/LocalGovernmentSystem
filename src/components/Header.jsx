@@ -1,3 +1,6 @@
+const APP_TITLE    = import.meta.env.VITE_APP_TITLE    ?? '市民ポータル'
+const APP_SUBTITLE = import.meta.env.VITE_APP_SUBTITLE ?? '住民の暮らしが便利になる自治体とつながるアプリ'
+
 export default function Header({ currentPage, onNavigate }) {
   return (
     <header className="header">
@@ -5,8 +8,8 @@ export default function Header({ currentPage, onNavigate }) {
         <div className="header-brand" onClick={() => onNavigate('home')} style={{ cursor: 'pointer' }}>
           <span className="brand-icon">🏛</span>
           <div className="brand-text">
-            <h1>自治体向けシステム</h1>
-            <p>住民の暮らしが便利になる自治体とつながるアプリ</p>
+            <h1>{APP_TITLE}</h1>
+            <p>{APP_SUBTITLE}</p>
           </div>
         </div>
         <div className="header-actions">
