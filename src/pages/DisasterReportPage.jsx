@@ -23,8 +23,8 @@ const STATUS_STYLE = {
   '対応完了': { bg: '#d1fae5', color: '#059669' },
 }
 
-export default function DisasterReportPage({ reports, setReports }) {
-  const [tab, setTab]         = useState('report')
+export default function DisasterReportPage({ reports, setReports, defaultTab = 'report' }) {
+  const [tab, setTab]         = useState(defaultTab)
   const [submitted, setSubmitted]   = useState(false)
   const [newReportId, setNewReportId] = useState('')
   const [listView, setListView] = useState('map') // 'map' | 'cards'

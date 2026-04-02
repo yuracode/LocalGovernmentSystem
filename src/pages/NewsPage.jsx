@@ -270,7 +270,7 @@ export default function NewsPage({ disasterReports = [], onNavigate }) {
               該当エリアへの立入りはご注意ください。
             </p>
           </div>
-          <button className="bear-news-btn" onClick={() => onNavigate('disaster')}>
+          <button className="bear-news-btn" onClick={() => onNavigate('disaster', { tab: 'list' })}>
             地図で確認 →
           </button>
         </div>
@@ -313,7 +313,7 @@ export default function NewsPage({ disasterReports = [], onNavigate }) {
           {activeReports.length > 4 && (
             <p className="disaster-news-overflow">
               他 {activeReports.length - 4} 件の報告があります。
-              <button className="link-btn" onClick={() => onNavigate('disaster')}>すべて確認する</button>
+              <button className="link-btn" onClick={() => onNavigate('disaster', { tab: 'list' })}>すべて確認する</button>
             </p>
           )}
         </section>

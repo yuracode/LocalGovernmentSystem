@@ -52,8 +52,11 @@ function App() {
   const [serviceId, setServiceId] = useState(null)
   const [disasterReports, setDisasterReports] = useState(INITIAL_REPORTS)
 
+  const [disasterTab, setDisasterTab] = useState('report')
+
   const navigate = (page, opts = {}) => {
     if (page === 'service') setServiceId(opts.serviceId ?? null)
+    if (page === 'disaster') setDisasterTab(opts.tab ?? 'report')
     setCurrentPage(page)
   }
 
@@ -64,7 +67,7 @@ function App() {
       case 'faq':      return <FAQPage />
       case 'survey':   return <SurveyPage />
       case 'admin':    return <AdminPage />
-      case 'disaster': return <DisasterReportPage reports={disasterReports} setReports={setDisasterReports} />
+      case 'disaster': return <DisasterReportPage reports={disasterReports} setReports={setDisasterReports} defaultTab={disasterTab} />
       case 'service':  return <ServicePage serviceId={serviceId} onNavigate={navigate} />
       default:         return <HomePage onNavigate={navigate} />
     }
