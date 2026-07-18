@@ -2497,6 +2497,17 @@ tr.priority-low td:first-child {
   padding-top: 8px;
 }
 
+.form-submit-error {
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .btn-report {
   width: 100%;
   background: #dc2626;

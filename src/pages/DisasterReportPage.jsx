@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react'
+import { useState, useRef, lazy, Suspense } from 'react'
 
 const MapPicker = lazy(() => import('../components/MapPicker'))
 const ReportMap = lazy(() => import('../components/ReportMap'))
@@ -35,8 +35,12 @@ export default function DisasterReportPage({ reports, setReports, defaultTab = '
     anonymous: false, lat: null, lng: null,
   })
   const [errors, setErrors] = useState({})
+  const formRef = useRef(null)
 
   const bearCount = reports.filter(r => r.type === 'bear' && r.status !== '対応完了').length
+
+  // 氏名を必須にしない種別（クマ出没など、緊急で素早く報告したいもの）
+  const nameOptional = form.type === 'bear'
 
   const validate = () => {
     const e = {}
@@ -44,15 +48,31 @@ export default function DisasterReportPage({ reports, setReports, defaultTab = '
     if (!form.location.trim())    e.location    = '発生場所を入力してください'
     if (!form.datetime)           e.datetime    = '発生日時を入力してください'
     if (!form.description.trim()) e.description = '状況説明を入力してください'
-    if (!form.anonymous && !form.name.trim())
+    if (!nameOptional && !form.anonymous && !form.name.trim())
                                   e.name        = '氏名を入力してください（匿名の場合はチェックを入れてください）'
     return e
+  }
+
+  // 送信失敗時、最初の未入力項目へスクロール＆フォーカス
+  const focusFirstError = (errs) => {
+    const order = ['type', 'location', 'datetime', 'description', 'name']
+    const first = order.find(k => errs[k])
+    if (!first) return
+    if (first === 'type') {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    const el = document.getElementById(first)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus({ preventScroll: true })
+    }
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     const errs = validate()
-    if (Object.keys(errs).length > 0) { setErrors(errs); return }
+    if (Object.keys(errs).length > 0) { setErrors(errs); focusFirstError(errs); return }
 
     const id = `DR-2026-${String(45 + reports.length).padStart(4, '0')}`
     const now = new Date()
@@ -66,8 +86,8 @@ export default function DisasterReportPage({ reports, setReports, defaultTab = '
       location: form.location,
       datetime: form.datetime,
       description: form.description,
-      name: form.anonymous ? '匿名' : form.name,
-      contact: form.anonymous ? '' : form.contact,
+      name: (form.anonymous || !form.name.trim()) ? '匿名' : form.name,
+      contact: (form.anonymous || !form.name.trim()) ? '' : form.contact,
       status: '受付済',
       submittedAt,
       lat: form.lat,
@@ -145,7 +165,7 @@ export default function DisasterReportPage({ reports, setReports, defaultTab = '
               </div>
             </div>
           ) : (
-            <form className="disaster-form" onSubmit={handleSubmit} noValidate>
+            <form ref={formRef} className="disaster-form" onSubmit={handleSubmit} noValidate>
 
               {/* 災害種別 */}
               <div className="form-group">
@@ -257,7 +277,9 @@ export default function DisasterReportPage({ reports, setReports, defaultTab = '
               {!form.anonymous && (
                 <>
                   <div className="form-group">
-                    <label className="form-label required" htmlFor="name">氏名</label>
+                    <label className={`form-label ${nameOptional ? '' : 'required'}`} htmlFor="name">
+                      氏名{nameOptional && '（任意）'}
+                    </label>
                     <input
                       id="name"
                       type="text"
@@ -266,6 +288,9 @@ export default function DisasterReportPage({ reports, setReports, defaultTab = '
                       value={form.name}
                       onChange={e => handleChange('name', e.target.value)}
                     />
+                    {nameOptional && (
+                      <p className="form-hint">クマ出没など緊急の報告は、氏名を入力しなくても送信できます（匿名扱い）。</p>
+                    )}
                     {errors.name && <p className="form-error">{errors.name}</p>}
                   </div>
                   <div className="form-group">
@@ -283,6 +308,11 @@ export default function DisasterReportPage({ reports, setReports, defaultTab = '
               )}
 
               <div className="form-submit">
+                {Object.keys(errors).length > 0 && (
+                  <p className="form-submit-error" role="alert">
+                    ⚠️ 未入力の必須項目があります。赤字で示した項目をご確認ください。
+                  </p>
+                )}
                 <button type="submit" className={`btn-report ${form.type === 'bear' ? 'btn-report-bear' : ''}`}>
                   {form.type === 'bear' ? '🐻 クマ出没を報告する' : '🚨 災害情報を報告する'}
                 </button>

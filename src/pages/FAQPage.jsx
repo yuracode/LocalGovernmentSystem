@@ -91,18 +91,22 @@ export default function FAQPage() {
           if (!line.startsWith('data: ')) continue
           const payload = line.slice(6).trim()
           if (payload === '[DONE]') break
+
+          let parsed
           try {
-            const { text, error } = JSON.parse(payload)
-            if (error) throw new Error(error)
-            if (text) {
-              aiText += text
-              setMessages(prev =>
-                prev.map(m => m.id === aiId ? { ...m, text: aiText } : m)
-              )
-              bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-            }
+            parsed = JSON.parse(payload)
           } catch {
-            // パースエラーは無視
+            continue // パースエラー（未完結JSON等）は無視
+          }
+
+          // サーバーからのエラーは外側の catch へ伝播させる
+          if (parsed.error) throw new Error(parsed.error)
+          if (parsed.text) {
+            aiText += parsed.text
+            setMessages(prev =>
+              prev.map(m => m.id === aiId ? { ...m, text: aiText } : m)
+            )
+            bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
           }
         }
       }
@@ -114,9 +118,15 @@ export default function FAQPage() {
       }
     } catch (err) {
       if (err.name === 'AbortError') return
-      const errText = err.message.includes('GEMINI_API_KEY')
-        ? 'APIキーが設定されていません。.env ファイルに GEMINI_API_KEY を追加してください。'
-        : `エラーが発生しました：${err.message}\n市役所（代表 000-000-0000）にお問い合わせください。`
+      const msg = err.message || ''
+      let errText
+      if (msg.includes('GEMINI_API_KEY')) {
+        errText = 'APIキーが設定されていません。.env ファイルに GEMINI_API_KEY を追加してください。'
+      } else if (msg.includes('429') || /quota|rate limit/i.test(msg)) {
+        errText = 'ただいまアクセスが集中しています。少し時間をおいてから、もう一度お試しください。'
+      } else {
+        errText = `エラーが発生しました：${msg}\n市役所（代表 000-000-0000）にお問い合わせください。`
+      }
       setMessages(prev =>
         prev.map(m => m.id === aiId ? { ...m, text: errText, isError: true } : m)
       )
